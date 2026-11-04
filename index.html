@@ -30,8 +30,8 @@
 </main></div>
 <script>
 const $=id=>document.getElementById(id),fmt=n=>'₺'+(Number(n)||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
-const base={profile:{standard:145,premium:195,colored:265},glass:{single:0,double:1250,lowe:1750,triple:2100,tempered:1850},hardware:520,shutter:1850,screen:650};
-let db=JSON.parse(localStorage.getItem('pvcpro')||'{}');db.prices=db.prices||JSON.parse(JSON.stringify(base));db.prices.glass=db.prices.glass||{};if(db.prices.glass.single===undefined)db.prices.glass.single=0;db.quotes=db.quotes||[];db.customers=db.customers||[];db.rules=db.rules||{labor:450,install:350,waste:8,margin:25,vat:20,minProfit:0};db.company=db.company||{};db.addons=db.addons||[];db.designs=db.designs||[];db.profileLibrary=db.profileLibrary||[];
+const base={profile:{standard:145,premium:195,colored:265},glass:{single:850,double:1250,lowe:1750,triple:2100,tempered:1850},hardware:520,shutter:1850,screen:650};
+let db=JSON.parse(localStorage.getItem('pvcpro')||'{}');db.prices=db.prices||JSON.parse(JSON.stringify(base));db.prices.glass=db.prices.glass||{};if(db.prices.glass.single===undefined||db.prices.glass.single===0)db.prices.glass.single=850;db.quotes=db.quotes||[];db.customers=db.customers||[];db.rules=db.rules||{labor:450,install:350,waste:8,margin:25,vat:20,minProfit:0};db.company=db.company||{};db.addons=db.addons||[];db.designs=db.designs||[];db.profileLibrary=db.profileLibrary||[];
 if(!db.profileLibrary.some(p=>p.brand==="Toriplast"&&p.code==="T7001")){
 const groups=[
 {series:"70 lik",items:[["kasa","T7001","L Kasa",65,45,"takviye 28x28 mm"],["kanat","T7002","Pencere kanadı",60,60,"takviye 28x28 mm"],["kanat","T7003","Kapı kanadı",84,84,"takviye 40x30 mm"],["orta","T7004","Orta kayıt",83,43,"takviye 28x28 mm"],["kasa","T7005","Pervazlı kasa",60,85,"takviye 28x28 mm"],["citasi","T7007","Tek cam çıtası",0,0,"17 mm"],["citasi","T7008","Çift cam çıtası",0,0,"17 mm; 24 mm cam 4-16-4"]]},
