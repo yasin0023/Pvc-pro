@@ -89,6 +89,17 @@ function addonAmount(a,d){let area=d.w*d.h/1e6,meters=2*(d.w+d.h)/1000;if(a.id==
 function renderAddonOptions(){let built=[{id:'builtin-shutter',name:'Panjur',price:db.prices.shutter,unit:'m2',builtin:'shutter'},{id:'builtin-screen',name:'Sineklik',price:db.prices.screen,unit:'m2',builtin:'screen'}];let all=built.concat(db.addons);$('addonOptions').innerHTML=all.map(a=>'<label class="addon-option"><input class="addon-check" type="checkbox" value="'+a.id+'" onchange="renderDrawing()"><span><b>'+safe(a.name)+'</b><br><small class="muted">'+fmt(a.price)+' / '+(a.unit==='m2'?'m²':a.unit==='meter'?'metre':'adet')+'</small></span></label>').join('')||'<span class="muted">Henüz seçenek yok.</span>'}
 function addAddonDefinition(){let name=$('newAddonName').value.trim(),price=Number($('newAddonPrice').value),unit=$('newAddonUnit').value;if(!name||!Number.isFinite(price)||price<0){alert('Seçenek adı ve geçerli bir fiyat gir.');return}db.addons.push({id:'custom-'+Date.now(),name,price,unit});$('newAddonName').value='';$('newAddonPrice').value='';persist();renderAddonOptions();calc();alert('Özel seçenek eklendi. Artık ürünlerde seçebilirsin.')}
 function profileBreakdown(d){let frame=2*(d.w+d.h)/1000,panels=panelKeys(),sash=0;panels.forEach(p=>{let t=panelType(p.key);if(t==='fixed')return;let pw=p.x2-p.x1,ph=p.y2-p.y1;if(t==='double-left'||t==='double-right'){let half=pw/2;sash+=2*(2*(half+ph))/1000}else sash+=2*(pw+ph)/1000});let middle=(layout.v.length*d.h+layout.h.length*d.w+(layout.hSegments||[]).reduce((sum,q)=>sum+(q.x2-q.x1),0))/1000;return {frame,sash,middle,total:frame+sash+middle}}
+const PRODUCTION_RULES={
+Adopen:{
+'70 lik':{
+frame:{angle:45,addMm:6,description:'Kasa her parçasına +6 mm kaynak payı'},
+mullion:{angle:90,addMm:6,connection:'vidalı',description:'Kasa iç boşluğu +6 mm; patik ve bağlantı takozu ile vidalı'},
+sash:{angle:45,innerOpeningAddMm:25,description:'Kanat kesimi kasa iç ölçüsü +25 mm'},
+glass:{widthMinusMm:10,heightMinusMm:10,description:'Cam boşluğundan en ve boyda 10 mm düşülür'},
+reinforcement:{frameAndSashMinusMm:30,mullionSameLength:true,description:'Kasa/kanat takviyesi PVC boyundan toplam 30 mm kısa; orta kayıt takviyesi orta kayıtla aynı boy'}
+}
+}
+};
 const PROFILE_SYSTEMS={
 Adopen:[
 {id:'w777',name:'Atlantik 777 / W777',series:'70 lik',glass:'4, 20, 24, 28, 32, 40, 42 mm',note:'70 mm · 5 odacık · 3 conta.'},
