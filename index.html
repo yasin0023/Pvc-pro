@@ -90,6 +90,14 @@ function renderAddonOptions(){let built=[{id:'builtin-shutter',name:'Panjur',pri
 function addAddonDefinition(){let name=$('newAddonName').value.trim(),price=Number($('newAddonPrice').value),unit=$('newAddonUnit').value;if(!name||!Number.isFinite(price)||price<0){alert('Seçenek adı ve geçerli bir fiyat gir.');return}db.addons.push({id:'custom-'+Date.now(),name,price,unit});$('newAddonName').value='';$('newAddonPrice').value='';persist();renderAddonOptions();calc();alert('Özel seçenek eklendi. Artık ürünlerde seçebilirsin.')}
 function profileBreakdown(d){let frame=2*(d.w+d.h)/1000,panels=panelKeys(),sash=0;panels.forEach(p=>{let t=panelType(p.key);if(t==='fixed')return;let pw=p.x2-p.x1,ph=p.y2-p.y1;if(t==='double-left'||t==='double-right'){let half=pw/2;sash+=2*(2*(half+ph))/1000}else sash+=2*(pw+ph)/1000});let middle=(layout.v.length*d.h+layout.h.length*d.w+(layout.hSegments||[]).reduce((sum,q)=>sum+(q.x2-q.x1),0))/1000;return {frame,sash,middle,total:frame+sash+middle}}
 const PRODUCTION_RULES={
+allBrands:{
+appliesTo:['Adopen','Orpen','Toriplast'],
+frame:{angle:45,addMm:6,description:'Tüm markalarda kasa her parçasına +6 mm kaynak payı'},
+mullion:{angle:90,addMm:6,connection:'vidalı',description:'Tüm markalarda kasa iç boşluğu +6 mm; patik ve bağlantı takozu ile vidalı'},
+sash:{angle:45,innerOpeningAddMm:25,singleAndDoubleSashSame:true,description:'Tüm markalarda tek ve çift kanat aynı hesapla; kanat kesimi kasa iç ölçüsü +25 mm'},
+glass:{widthMinusMm:10,heightMinusMm:10,appliesTo:'all_sashes_and_fixed_glass',description:'Tüm markalarda açılır kanat ve sabit camların tamamında cam boşluğundan en ve boyda 10 mm düşülür'},
+reinforcement:{frameAndSashMinusMm:30,mullionSameLength:true,description:'Tüm markalarda kasa/kanat takviyesi PVC boyundan toplam 30 mm kısa; orta kayıt takviyesi orta kayıtla aynı boy'}
+},
 Adopen:{
 '70 lik':{
 frame:{angle:45,addMm:6,description:'Kasa her parçasına +6 mm kaynak payı'},
