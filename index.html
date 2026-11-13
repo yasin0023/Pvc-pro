@@ -16,6 +16,25 @@
 
 .legacy-tool-caption{font-size:8px;font-weight:800;letter-spacing:.35px;text-align:center;color:#596b7e;padding:5px 0 1px}.legacy-iconbar button{display:grid;place-items:center;min-width:34px;cursor:pointer}.legacy-iconbar button svg{width:25px;height:25px;display:block}.legacy-iconbar button:hover{border-color:#6385aa;background:linear-gradient(#fff,#dce8f5)}.legacy-iconbar{background:linear-gradient(90deg,#d8dde2,#edf0f3)}
  .danger{background:#fde8e7;color:#a12622;border:1px solid #f2b9b5;padding:7px 10px}.danger:hover{background:#fbd5d2}
+
+/* Mobile dashboard fit and spacing */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+.layout,.main,.section,.grid,.card{min-width:0}
+#home{width:100%;max-width:100%}
+#home .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+#home .cols{grid-template-columns:minmax(0,1fr);gap:10px}
+#home .card{padding:14px;overflow-wrap:anywhere}
+#home .card h3{margin:0 0 10px;font-size:16px}
+#home .stat{font-size:22px;line-height:1.25}
+#home .muted{line-height:1.55}
+#home .primary{max-width:100%}
+@media(max-width:480px){
+ .main{padding:10px}
+ #home .stats{gap:8px;margin:10px 0}
+ #home .card{padding:12px}
+ #home .stat{font-size:20px}
+ #home .cols{gap:9px}
+}
 </style></head><body><div class="layout"><aside class="side"><div class="logo">PVC <b>PRO</b></div><nav class="nav"><button class="active" data-tab="home">▦ Genel Bakış</button><button data-tab="draw">⌗ Çizim & Hesap</button><button data-tab="quotes">▤ Teklifler</button><button data-tab="customers">♙ Müşteriler</button><button data-tab="prices">₺ Fiyat Listesi</button><button data-tab="profiles">▦ Profil Kütüphanesi</button><button data-tab="settings">⚙ Firma Ayarları</button></nav></aside><main class="main">
 <header class="top" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div style="color:#2463eb;font-size:11px;font-weight:800;letter-spacing:1px">PVC DOĞRAMA YÖNETİMİ</div><h1 id="title">Genel Bakış</h1><div class="muted">2D çizim · metraj · maliyet · müşteri teklifi</div></div><button class="primary no-print" onclick="tab('draw')">+ Yeni ürün</button></header>
 <section id="home" class="section active"><div class="grid stats"><div class="card">Teklif sayısı<div class="stat" id="nq">0</div></div><div class="card">Müşteri<div class="stat" id="nc">0</div></div><div class="card">Teklif toplamı<div class="stat" id="sum">₺0</div></div><div class="card">Ortalama kâr<div class="stat" id="avg">—</div></div></div><div class="grid cols"><div class="card"><h3>Son teklifler</h3><div id="recent"></div></div><div class="card"><h3>Nasıl kullanılır?</h3><p class="muted">Ürün ve ölçüyü gir, çizimi kontrol et, fiyatlarını düzenle, ürünü sepete ekle. Teklifi kaydedip PDF olarak yazdır.</p><button class="primary" onclick="tab('draw')">Çizime başla</button><p class="note">Fiyat alanlarındaki örnek rakamları kendi tedarikçi listenle değiştir. Veriler bu tarayıcıda saklanır.</p></div></div></section>
