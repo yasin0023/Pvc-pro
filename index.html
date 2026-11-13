@@ -142,7 +142,7 @@ function optimizeCutParts(parts,opts){
  const groups={};parts.forEach(p=>(groups[p.profileId]||(groups[p.profileId]=[])).push({...p}));
  const plans=[];
  Object.keys(groups).forEach(id=>{
-  const p=(db.profileLibrary||[]).find(x=>x.id===id),stock=Number(p&&p.stock)||6000;
+  const p=(db.profileLibrary||[]).find(x=>x.id===id),stock=Number((db.inventory[id]&&db.inventory[id].stockLength)||(p&&p.stock))||6000;
   const kerf=Math.max(0,Number(opts.kerf)||0),trimStart=Math.max(0,Number(opts.trimStart)||0),trimEnd=Math.max(0,Number(opts.trimEnd)||0),minRemnant=Math.max(0,Number(opts.minRemnant)||0);
   const items=groups[id].sort((a,b)=>b.length-a.length),remnantItems=(db.remnants||[]).filter(r=>r.profileId===id).sort((a,b)=>b.length-a.length);
   const bars=remnantItems.map(r=>({source:'remnant',remnantId:r.id,stockLength:r.length,remaining:r.length,cuts:[],used:0}));
@@ -168,8 +168,8 @@ function runCutOptimization(){
  try{
   const parts=buildCutParts();if(!parts.length)return alert('Kesilecek profil bulunamadı. Seçili marka/seri için kasa, kanat, orta kayıt ve çıta profillerini Profil Kütüphanesi bölümünde tanımla.');
   const opts=cutPlanOptions(),plans=optimizeCutParts(parts,opts);window.currentCutPlan={createdAt:new Date().toISOString(),options:opts,plans,parts};
-  const totalBars=plans.reduce((a,p)=>a+p.barCount,0),totalStock=plans.reduce((a,p)=>a+p.totalStock,0),totalParts=plans.reduce((a,p)=>a+p.totalPart,0),remnants=plans.reduce((a,p)=>a+p.bars.filter(b=>b.reusable).length,0);
-  $('cutPlanResult').innerHTML='<p><b>'+parts.length+' parça</b> · <b>'+totalBars+' çubuk</b> · kullanılan malzeme '+(totalStock/1000).toFixed(2)+' m · parça toplamı '+(totalParts/1000).toFixed(2)+' m · yeniden kullanılabilir artık '+remnants+' adet</p>'+plans.map(p=>'<h4>'+safe(p.profileLabel)+' — '+p.barCount+' × '+p.stockLength+' mm</h4>'+p.bars.map(b=>'<div style="border:1px solid #cbd5e1;border-radius:8px;padding:8px;margin:6px 0"><b>Çubuk '+b.index+'</b> · '+b.stockLength+' mm<br>'+b.cuts.map(c=>safe(c.label)+': <b>'+c.length+' mm</b> ('+c.angle+')').join(' → ')+'<br><small>Kalan: '+b.remnant+' mm · '+(b.reusable?'Depoya artık olarak kaydedilebilir':'Fire / kısa artık')+'</small></div>').join('')+'<p class="note">Profil toplamı '+(p.totalPart/1000).toFixed(2)+' m · çubuk alımı '+(p.totalStock/1000).toFixed(2)+' m · kalan '+(p.totalRemnant/1000).toFixed(2)+' m</p>').join('');
+  const totalBars=plans.reduce((a,p)=>a+p.barCount,0),totalStock=plans.reduce((a,p)=>a+p.totalStock,0),totalParts=plans.reduce((a,p)=>a+p.totalPart,0),remnants=plans.reduce((a,p)=>a+p.bars.filter(b=>b.reusable).length,0),yieldPct=totalStock?100*totalParts/totalStock:0;
+  $('cutPlanResult').innerHTML='<p><b>'+parts.length+' parça</b> · <b>'+totalBars+' çubuk</b> · kullanılan malzeme '+(totalStock/1000).toFixed(2)+' m · parça toplamı '+(totalParts/1000).toFixed(2)+' m · verim '+yieldPct.toFixed(1)+'% · yeniden kullanılabilir artık '+remnants+' adet</p>'+plans.map(p=>'<h4>'+safe(p.profileLabel)+' — '+p.barCount+' × '+p.stockLength+' mm</h4>'+p.bars.map(b=>'<div style="border:1px solid #cbd5e1;border-radius:8px;padding:8px;margin:6px 0"><b>Çubuk '+b.index+'</b> · '+b.stockLength+' mm<br>'+b.cuts.map(c=>safe(c.label)+': <b>'+c.length+' mm</b> ('+c.angle+')').join(' → ')+'<br><small>Kalan: '+b.remnant+' mm · '+(b.reusable?'Depoya artık olarak kaydedilebilir':'Fire / kısa artık')+'</small></div>').join('')+'<p class="note">Profil toplamı '+(p.totalPart/1000).toFixed(2)+' m · çubuk alımı '+(p.totalStock/1000).toFixed(2)+' m · kalan '+(p.totalRemnant/1000).toFixed(2)+' m</p>').join('');
  }catch(e){alert('Kesim planı oluşturulamadı: '+e.message)}
 }
 function saveCutSettings(){db.cutSettings=cutPlanOptions();persist();alert('Kesim ayarları kaydedildi.')}
@@ -300,7 +300,7 @@ function receiveProfileStock(){
  const qty=Math.floor(+$('stockReceiveQty').value),len=+$('stockReceiveLength').value;
  if(!Number.isFinite(qty)||qty<1||!Number.isFinite(len)||len<1)return alert('Çubuk adedi ve boyu pozitif olmalı.');
  const st=db.inventory[id]||(db.inventory[id]={bars:0,meters:0,location:''});
- st.bars=(Number(st.bars)||0)+qty;st.meters=(Number(st.meters)||0)+qty*len;st.stockLength=len;st.location=$('stockLocation').value.trim()||st.location||'';
+ st.bars=(Number(st.bars)||0)+qty;st.meters=(Number(st.meters)||0)+qty*len;if((Number(st.meters)||0)>0&&Number(st.stockLength)!==len)return alert('Bu profil için stokta farklı çubuk boyu var. Farklı boyları aynı stok kartında karıştırma; ayrı profil kartı aç.');st.stockLength=len;st.location=$('stockLocation').value.trim()||st.location||'';
  db.stockMoves.unshift({id:'SM-'+Date.now(),date:new Date().toLocaleString('tr-TR'),profileId:id,profileLabel:stockProfileLabel(p),type:'Mal kabul',meters:qty*len/1000,bars:qty,ref:'Mal kabul'});
  persist();renderInventory();alert(qty+' çubuk stoğa eklendi.');
 }
@@ -321,6 +321,7 @@ function issueWorkOrder(id){
  if(shortages.length)return alert('Tam çubuk stoğu yetersiz:\n'+shortages.map(p=>p.profileLabel+': gerekli '+p.barCount+' çubuk, mevcut '+p.availableBars+' çubuk, eksik '+p.missingBars).join('\n'));
  if(!confirm('Optimize edilmiş kesim planındaki çubuklar stoktan düşülsün mü? Bu işlem bir kez uygulanır.'))return;
  w.cutPlan.plans.forEach(p=>{
+  if(p.remnantIdsUsed&&p.remnantIdsUsed.length)db.remnants=db.remnants.filter(r=>!p.remnantIdsUsed.includes(r.id));
   const st=db.inventory[p.profileId];st.bars=Math.max(0,(Number(st.bars)||0)-p.barCount);st.meters=Math.max(0,(Number(st.meters)||0)-p.barCount*p.stockLength);
   p.bars.forEach(b=>{if(b.reusable&&b.remnant>0)db.remnants.push({id:'REM-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),profileId:p.profileId,profileLabel:p.profileLabel,length:b.remnant,location:st.location||'',sourceOrder:w.id,createdAt:new Date().toLocaleString('tr-TR')})});
   db.stockMoves.unshift({id:'SM-'+Date.now()+'-'+p.profileId,date:new Date().toLocaleString('tr-TR'),profileId:p.profileId,profileLabel:p.profileLabel,type:'İş emrine çubuk çıkışı',meters:-p.barCount*p.stockLength/1000,bars:-p.barCount,ref:w.id});
