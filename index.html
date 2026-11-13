@@ -153,8 +153,9 @@ function optimizeCutParts(parts,opts){
    const b={source:'fullbar',stockLength:stock,remaining:stock-trimStart-trimEnd,cuts:[],used:trimStart+trimEnd};bars.push(b);b.cuts.push({...item,kerfBefore:0});b.remaining-=item.length;b.used+=item.length;
   });
   bars.forEach((b,i)=>{b.index=i+1;b.remnant=Math.max(0,b.remaining);b.scrap=b.remnant<minRemnant?b.remnant:0;b.reusable=b.remnant>=minRemnant});
-  const fullBars=bars.filter(b=>b.source==='fullbar'),totalPart=items.reduce((a,x)=>a+x.length,0),totalStock=fullBars.length*stock+remnantItems.filter(r=>bars.some(b=>b.remnantId===r.id)).reduce((a,r)=>a+r.length,0),totalRemnant=bars.reduce((a,b)=>a+b.remnant,0);
-  plans.push({profileId:id,profileLabel:stockProfileLabel(p),type:p.type,stockLength:stock,barCount:fullBars.length,remnantIdsUsed:bars.filter(b=>b.source==='remnant'&&b.cuts.length).map(b=>b.remnantId),existingRemnantsUsed:bars.filter(b=>b.source==='remnant'&&b.cuts.length).length,totalPart,totalStock,totalRemnant,kerf,trimStart,trimEnd,bars});
+  const usedBars=bars.filter(b=>b.source==='fullbar'||b.cuts.length),fullBars=usedBars.filter(b=>b.source==='fullbar'),totalPart=items.reduce((a,x)=>a+x.length,0),totalStock=fullBars.length*stock+usedBars.filter(b=>b.source==='remnant').reduce((a,b)=>a+b.stockLength,0),totalRemnant=usedBars.reduce((a,b)=>a+b.remnant,0);
+  usedBars.forEach((b,i)=>b.index=i+1);
+  plans.push({profileId:id,profileLabel:stockProfileLabel(p),type:p.type,stockLength:stock,barCount:fullBars.length,remnantIdsUsed:usedBars.filter(b=>b.source==='remnant').map(b=>b.remnantId),existingRemnantsUsed:usedBars.filter(b=>b.source==='remnant').length,totalPart,totalStock,totalRemnant,kerf,trimStart,trimEnd,bars:usedBars});
  });
  return plans;
 }
