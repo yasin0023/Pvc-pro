@@ -144,17 +144,17 @@ function optimizeCutParts(parts,opts){
  Object.keys(groups).forEach(id=>{
   const p=(db.profileLibrary||[]).find(x=>x.id===id),stock=Number(p&&p.stock)||6000;
   const kerf=Math.max(0,Number(opts.kerf)||0),trimStart=Math.max(0,Number(opts.trimStart)||0),trimEnd=Math.max(0,Number(opts.trimEnd)||0),minRemnant=Math.max(0,Number(opts.minRemnant)||0);
-  const items=groups[id].sort((a,b)=>b.length-a.length),bars=[];
+  const items=groups[id].sort((a,b)=>b.length-a.length),remnantItems=(db.remnants||[]).filter(r=>r.profileId===id).sort((a,b)=>b.length-a.length);
+  const bars=remnantItems.map(r=>({source:'remnant',remnantId:r.id,stockLength:r.length,remaining:r.length,cuts:[],used:0}));
   items.forEach(item=>{
+   const fits=bars.find(b=>b.remaining>=item.length+(b.cuts.length?kerf:0));
+   if(fits){const loss=fits.cuts.length?kerf:0;fits.cuts.push({...item,kerfBefore:loss});fits.remaining-=item.length+loss;fits.used+=item.length+loss;return;}
    if(item.length+trimStart+trimEnd>stock)throw new Error(item.label+' ('+item.length+' mm) '+stock+' mm çubuğa sığmıyor.');
-   let target=bars.find(b=>b.remaining>=item.length+kerf);
-   if(!target){target={stockLength:stock,remaining:stock-trimStart-trimEnd,cuts:[],used:trimStart+trimEnd};bars.push(target)}
-   const loss=target.cuts.length?kerf:0;
-   target.cuts.push({...item,kerfBefore:loss});target.remaining-=item.length+loss;target.used+=item.length+loss;
+   const b={source:'fullbar',stockLength:stock,remaining:stock-trimStart-trimEnd,cuts:[],used:trimStart+trimEnd};bars.push(b);b.cuts.push({...item,kerfBefore:0});b.remaining-=item.length;b.used+=item.length;
   });
   bars.forEach((b,i)=>{b.index=i+1;b.remnant=Math.max(0,b.remaining);b.scrap=b.remnant<minRemnant?b.remnant:0;b.reusable=b.remnant>=minRemnant});
-  const totalPart=items.reduce((a,x)=>a+x.length,0),totalStock=bars.length*stock,totalRemnant=bars.reduce((a,b)=>a+b.remnant,0);
-  plans.push({profileId:id,profileLabel:stockProfileLabel(p),type:p.type,stockLength:stock,barCount:bars.length,totalPart,totalStock,totalRemnant,kerf,trimStart,trimEnd,bars});
+  const fullBars=bars.filter(b=>b.source==='fullbar'),totalPart=items.reduce((a,x)=>a+x.length,0),totalStock=fullBars.length*stock+remnantItems.filter(r=>bars.some(b=>b.remnantId===r.id)).reduce((a,r)=>a+r.length,0),totalRemnant=bars.reduce((a,b)=>a+b.remnant,0);
+  plans.push({profileId:id,profileLabel:stockProfileLabel(p),type:p.type,stockLength:stock,barCount:fullBars.length,remnantIdsUsed:bars.filter(b=>b.source==='remnant'&&b.cuts.length).map(b=>b.remnantId),existingRemnantsUsed:bars.filter(b=>b.source==='remnant'&&b.cuts.length).length,totalPart,totalStock,totalRemnant,kerf,trimStart,trimEnd,bars});
  });
  return plans;
 }
